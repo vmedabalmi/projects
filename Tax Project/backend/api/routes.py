@@ -1,10 +1,11 @@
 """API routes for the tax planner."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 from backend.engine.calculator import calculate
 from backend.models.taxpayer import TaxInput, TaxResult
+from backend.rag.guidance import GuidanceResult, search as search_guidance
 
 router = APIRouter()
 
@@ -37,3 +38,9 @@ def compare_scenarios(request: ScenarioRequest) -> ScenarioResponse:
         scenario_b=result_b,
         difference=difference,
     )
+
+
+@router.get("/guidance", response_model=list[GuidanceResult])
+def get_guidance(q: str = Query(min_length=1), top_k: int = Query(default=3, ge=1, le=10)):
+    """Search tax guidance knowledge base."""
+    return search_guidance(q, top_k=top_k)

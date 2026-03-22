@@ -1,0 +1,74 @@
+[
+  {
+    "id": "standard_deduction",
+    "topic": "Standard Deduction",
+    "keywords": ["standard deduction", "deduction", "standard"],
+    "content": "The standard deduction reduces your taxable income by a fixed amount based on your filing status. For 2025: Single $15,000; Married Filing Jointly $30,000; Head of Household $22,500. You should itemize only if your total itemized deductions exceed the standard deduction."
+  },
+  {
+    "id": "itemized_deductions",
+    "topic": "Itemized Deductions",
+    "keywords": ["itemized", "itemize", "deductions", "schedule a", "mortgage", "salt", "charitable"],
+    "content": "Itemized deductions include mortgage interest, state and local taxes (SALT, capped at $10,000), charitable contributions, and medical expenses exceeding 7.5% of AGI. You benefit from itemizing only when the total exceeds your standard deduction."
+  },
+  {
+    "id": "schedule_c",
+    "topic": "Schedule C (Self-Employment)",
+    "keywords": ["schedule c", "self-employment", "freelance", "1099", "business income", "sole proprietor"],
+    "content": "Schedule C reports profit or loss from a sole proprietorship or freelance work. You can deduct ordinary and necessary business expenses such as advertising, office supplies, travel, and a home office. Meals are 50% deductible. Net profit is subject to both income tax and self-employment tax."
+  },
+  {
+    "id": "self_employment_tax",
+    "topic": "Self-Employment Tax",
+    "keywords": ["self-employment tax", "se tax", "social security", "medicare", "fica"],
+    "content": "Self-employment tax covers Social Security (12.4%) and Medicare (2.9%) for self-employed individuals. It applies to 92.35% of net self-employment earnings. Social Security tax applies up to the wage base ($176,100 for 2025). You can deduct 50% of SE tax from your adjusted gross income."
+  },
+  {
+    "id": "qbi_deduction",
+    "topic": "QBI Deduction (Section 199A)",
+    "keywords": ["qbi", "qualified business income", "199a", "20 percent", "pass-through"],
+    "content": "The Qualified Business Income deduction allows eligible self-employed individuals and pass-through business owners to deduct up to 20% of qualified business income. For 2025, the full deduction is available if taxable income is below $191,950 (single) or $383,900 (MFJ). Above these thresholds, limitations apply."
+  },
+  {
+    "id": "home_office",
+    "topic": "Home Office Deduction",
+    "keywords": ["home office", "work from home", "office deduction", "simplified method"],
+    "content": "The simplified home office deduction allows $5 per square foot of dedicated home office space, up to 300 square feet ($1,500 maximum). The space must be used regularly and exclusively for business. This is only available for self-employed individuals (Schedule C filers), not W-2 employees."
+  },
+  {
+    "id": "child_tax_credit",
+    "topic": "Child Tax Credit",
+    "keywords": ["child tax credit", "ctc", "dependent", "children", "kids"],
+    "content": "The Child Tax Credit provides up to $2,000 per qualifying child under age 17. It phases out at $200,000 AGI for single filers and $400,000 for married filing jointly, reducing by $50 for each $1,000 over the threshold."
+  },
+  {
+    "id": "filing_status",
+    "topic": "Filing Status",
+    "keywords": ["filing status", "single", "married", "head of household", "mfj", "mfs"],
+    "content": "Your filing status affects your standard deduction, tax brackets, and eligibility for credits. Single: unmarried individuals. Married Filing Jointly (MFJ): married couples combining income. Married Filing Separately (MFS): married individuals filing separately. Head of Household (HOH): unmarried individuals supporting a dependent."
+  },
+  {
+    "id": "tax_brackets",
+    "topic": "Federal Tax Brackets",
+    "keywords": ["tax brackets", "tax rates", "marginal rate", "progressive tax", "income tax"],
+    "content": "The U.S. uses progressive tax brackets for 2025: 10%, 12%, 22%, 24%, 32%, 35%, and 37%. Only income within each bracket is taxed at that rate. Your marginal rate is the rate on your last dollar of income; your effective rate is total tax divided by total income."
+  },
+  {
+    "id": "estimated_taxes",
+    "topic": "Estimated Tax Payments",
+    "keywords": ["estimated taxes", "quarterly", "1040-es", "safe harbor", "underpayment penalty"],
+    "content": "Self-employed individuals and others without sufficient withholding must make quarterly estimated tax payments (Form 1040-ES). Payments are due April 15, June 15, September 15, and January 15. To avoid underpayment penalties, pay at least 90% of current year tax or 100% of prior year tax (110% if AGI exceeds $150,000)."
+  },
+  {
+    "id": "salt_cap",
+    "topic": "SALT Deduction Cap",
+    "keywords": ["salt", "state and local tax", "salt cap", "10000", "property tax"],
+    "content": "The State and Local Tax (SALT) deduction is capped at $10,000 ($5,000 for married filing separately). This includes state income taxes, local income taxes, and property taxes combined. This cap was enacted by the Tax Cuts and Jobs Act and remains in effect for 2025."
+  },
+  {
+    "id": "medical_deduction",
+    "topic": "Medical Expense Deduction",
+    "keywords": ["medical", "medical expenses", "health", "7.5 percent", "agi threshold"],
+    "content": "You can deduct unreimbursed medical and dental expenses that exceed 7.5% of your adjusted gross income (AGI) if you itemize deductions. Qualifying expenses include doctor visits, prescriptions, insurance premiums (if not pre-tax), and long-term care."
+  }
+]

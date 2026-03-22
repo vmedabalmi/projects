@@ -33,6 +33,7 @@ class TaxYearConfig:
     qbi_deduction_rate: float  # 20%
     qbi_income_threshold_single: float
     qbi_income_threshold_mfj: float
+    qbi_phaseout_range: float  # $50,000 single, $100,000 MFJ
 
     # Home office simplified method
     home_office_rate_per_sqft: float  # $5
@@ -94,6 +95,7 @@ TAX_YEAR_2025 = TaxYearConfig(
     qbi_deduction_rate=0.20,
     qbi_income_threshold_single=191_950,
     qbi_income_threshold_mfj=383_900,
+    qbi_phaseout_range=50_000,  # $50k for single/HoH/MFS; MFJ uses 2x
     home_office_rate_per_sqft=5.0,
     home_office_max_sqft=300,
     child_tax_credit_amount=2_000,

@@ -51,26 +51,37 @@ def calculate_qbi_deduction(
     profile: TaxpayerProfile,
     config: TaxYearConfig,
 ) -> float:
-    """Calculate Qualified Business Income (QBI) deduction.
+    """Calculate Qualified Business Income (QBI) deduction with phase-out.
 
-    Simplified: 20% of QBI, limited to 20% of taxable income.
-    Full phase-out rules for high earners are not yet implemented.
+    Below threshold: full 20% of QBI (capped at 20% of taxable income).
+    In phase-out range: linearly reduced from full to zero.
+    Above threshold + range: no deduction.
+
+    Phase-out range is $50,000 for single/HoH/MFS, $100,000 for MFJ.
     """
     if net_profit <= 0:
         return 0.0
 
     if profile.filing_status == FilingStatus.MARRIED_FILING_JOINTLY:
         threshold = config.qbi_income_threshold_mfj
+        phaseout_range = config.qbi_phaseout_range * 2  # $100k for MFJ
     else:
         threshold = config.qbi_income_threshold_single
+        phaseout_range = config.qbi_phaseout_range  # $50k
 
-    # Below threshold: full 20% deduction
+    full_qbi = net_profit * config.qbi_deduction_rate
+    # Cannot exceed 20% of taxable income before QBI
+    max_deduction = taxable_income_before_qbi * config.qbi_deduction_rate
+    full_qbi = min(full_qbi, max_deduction)
+
     if taxable_income_before_qbi <= threshold:
-        qbi_deduction = net_profit * config.qbi_deduction_rate
-        # Cannot exceed 20% of taxable income before QBI
-        max_deduction = taxable_income_before_qbi * config.qbi_deduction_rate
-        return round(min(qbi_deduction, max_deduction), 2)
+        return round(full_qbi, 2)
 
-    # Above threshold: simplified — no QBI deduction
-    # (Full phase-out logic is complex and can be added later)
-    return 0.0
+    if taxable_income_before_qbi >= threshold + phaseout_range:
+        return 0.0
+
+    # In phase-out range: linear reduction
+    excess = taxable_income_before_qbi - threshold
+    reduction_pct = excess / phaseout_range
+    reduced_qbi = full_qbi * (1 - reduction_pct)
+    return round(max(reduced_qbi, 0), 2)

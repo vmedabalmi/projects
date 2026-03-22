@@ -74,6 +74,68 @@ class ScheduleCData(BaseModel):
         return self.gross_income - self.total_expenses
 
 
+class CapitalGainEntry(BaseModel):
+    description: str = ""
+    proceeds: float = Field(ge=0, default=0)
+    cost_basis: float = Field(ge=0, default=0)
+    is_long_term: bool = True
+
+    @property
+    def gain_or_loss(self) -> float:
+        return self.proceeds - self.cost_basis
+
+
+class ScheduleDData(BaseModel):
+    """Schedule D — Capital Gains and Losses."""
+    entries: list[CapitalGainEntry] = []
+
+    @property
+    def net_short_term(self) -> float:
+        return sum(e.gain_or_loss for e in self.entries if not e.is_long_term)
+
+    @property
+    def net_long_term(self) -> float:
+        return sum(e.gain_or_loss for e in self.entries if e.is_long_term)
+
+    @property
+    def total_gain_or_loss(self) -> float:
+        return self.net_short_term + self.net_long_term
+
+
+class RentalProperty(BaseModel):
+    description: str = ""
+    rents_received: float = Field(ge=0, default=0)
+    advertising: float = Field(ge=0, default=0)
+    insurance: float = Field(ge=0, default=0)
+    mortgage_interest: float = Field(ge=0, default=0)
+    repairs: float = Field(ge=0, default=0)
+    taxes: float = Field(ge=0, default=0)
+    utilities: float = Field(ge=0, default=0)
+    depreciation: float = Field(ge=0, default=0)
+    other_expenses: float = Field(ge=0, default=0)
+
+    @property
+    def total_expenses(self) -> float:
+        return (
+            self.advertising + self.insurance + self.mortgage_interest
+            + self.repairs + self.taxes + self.utilities
+            + self.depreciation + self.other_expenses
+        )
+
+    @property
+    def net_income(self) -> float:
+        return self.rents_received - self.total_expenses
+
+
+class ScheduleEData(BaseModel):
+    """Schedule E — Supplemental Income (Rental Real Estate)."""
+    properties: list[RentalProperty] = []
+
+    @property
+    def total_net_income(self) -> float:
+        return sum(p.net_income for p in self.properties)
+
+
 class DeductionData(BaseModel):
     mortgage_interest: float = Field(ge=0, default=0)
     state_and_local_taxes: float = Field(ge=0, default=0)  # SALT, capped at $10k
@@ -85,6 +147,8 @@ class TaxInput(BaseModel):
     profile: TaxpayerProfile = TaxpayerProfile()
     income: IncomeData = IncomeData()
     schedule_c: ScheduleCData | None = None
+    schedule_d: ScheduleDData | None = None
+    schedule_e: ScheduleEData | None = None
     deductions: DeductionData = DeductionData()
 
 
@@ -92,6 +156,9 @@ class TaxBreakdown(BaseModel):
     # Income
     total_income: float
     schedule_c_net_profit: float
+    schedule_d_gain_or_loss: float = 0
+    capital_gains_tax: float = 0
+    schedule_e_net_income: float = 0
     adjusted_gross_income: float
 
     # Deductions

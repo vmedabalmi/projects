@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tax Planner</title>
+<style>
+  :root {
+    --bg: #0a0a1a;
+    --surface: #141428;
+    --border: #2a2a4a;
+    --accent: #6c5ce7;
+    --accent-hover: #7c6cf7;
+    --text: #e0e0f0;
+    --muted: #8888aa;
+    --green: #00b894;
+    --red: #e17055;
+    --yellow: #fdcb6e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Courier New', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 8px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 30px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+  .tab {
+    padding: 10px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    border-radius: 6px 6px 0 0;
+  }
+  .tab.active {
+    background: var(--border);
+    color: var(--text);
+  }
+  .panel {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0 8px 8px 8px;
+    padding: 24px;
+  }
+  .panel.active { display: block; }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .form-group.full { grid-column: 1 / -1; }
+  label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  input, select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .section-title {
+    font-size: 14px;
+    color: var(--accent);
+    margin: 20px 0 12px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .section-title:first-child { margin-top: 0; }
+  button.calc-btn {
+    display: block;
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  button.calc-btn:hover { background: var(--accent-hover); }
+  /* Results */
+  .results { margin-top: 24px; display: none; }
+  .results.visible { display: block; }
+  .result-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .result-card h3 {
+    font-size: 13px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-row .label { color: var(--muted); }
+  .result-row .value { font-weight: bold; }
+  .result-row.highlight .value { color: var(--green); font-size: 16px; }
+  .result-row.warn .value { color: var(--red); }
+  /* Comparison */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .compare-col h3 {
+    text-align: center;
+    margin-bottom: 12px;
+    color: var(--accent);
+    font-size: 14px;
+  }
+  .diff-banner {
+    text-align: center;
+    padding: 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 18px;
+  }
+  .diff-banner .savings { color: var(--green); font-weight: bold; }
+  .diff-banner .costs { color: var(--red); font-weight: bold; }
+  @media (max-width: 700px) {
+    .form-grid, .compare-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>TAX PLANNER</h1>
+  <p class="subtitle">2025 Federal Tax Calculator &mdash; 1040 + Schedule C</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('single')">Calculate</button>
+    <button class="tab" onclick="switchTab('compare')">Compare Scenarios</button>
+  </div>
+
+  <!-- Single Calculation -->
+  <div id="panel-single" class="panel active">
+    <form id="tax-form" onsubmit="return handleCalculate(event)">
+      <div class="section-title">Profile</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Filing Status</label>
+          <select id="filing_status">
+            <option value="single">Single</option>
+            <option value="married_filing_jointly">Married Filing Jointly</option>
+            <option value="married_filing_separately">Married Filing Separately</option>
+            <option value="head_of_household">Head of Household</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Dependents Under 17</label>
+          <input type="number" id="dependents" value="0" min="0">
+        </div>
+      </div>
+
+      <div class="section-title">Income</div>
+      <div class="form-grid">
+        <div class="form-group"><label>W-2 Wages</label><input type="number" id="w2_wages" value="0" min="0" step="100"></div>
+        <div class="form-group"><label>Interest Income</label><input type="number" id="interest_income" value="0" min="0" step="100"></div>
+        <div class="form-group"><label>Dividend Income</label><input type="number" id="dividend_income" value="0" min="0" step="100"></div>
+        <div class="form-group"><label>Other Income</label><input type="number" id="other_income" value="0" min="0" step="100"></div>
+      </div>
+
+      <div class="section-title">Schedule C (Self-Employment)</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Gross Income</label><input type="number" id="sc_gross" value="0" min="0" step="100"></div>
+        <div class="form-group"><label>Advertising</label><input type="number" id="sc_advertising" value="0" min="0"></div>
+        <div class="form-group"><label>Car & Truck</label><input type="number" id="sc_car" value="0" min="0"></div>
+        <div class="form-group"><label>Office Expense</label><input type="number" id="sc_office" value="0" min="0"></div>
+        <div class="form-group"><label>Supplies</label><input type="number" id="sc_supplies" value="0" min="0"></div>
+        <div class="form-group"><label>Travel</label><input type="number" id="sc_travel" value="0" min="0"></div>
+        <div class="form-group"><label>Meals (50% deductible)</label><input type="number" id="sc_meals" value="0" min="0"></div>
+        <div class="form-group"><label>Utilities</label><input type="number" id="sc_utilities" value="0" min="0"></div>
+        <div class="form-group"><label>Other Expenses</label><input type="number" id="sc_other" value="0" min="0"></div>
+        <div class="form-group"><label>Home Office (sqft)</label><input type="number" id="sc_home_office" value="0" min="0" max="300"></div>
+      </div>
+
+      <div class="section-title">Itemized Deductions</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Mortgage Interest</label><input type="number" id="mortgage_interest" value="0" min="0"></div>
+        <div class="form-group"><label>State & Local Taxes</label><input type="number" id="salt" value="0" min="0"></div>
+        <div class="form-group"><label>Charitable Contributions</label><input type="number" id="charitable" value="0" min="0"></div>
+        <div class="form-group"><label>Medical Expenses</label><input type="number" id="medical" value="0" min="0"></div>
+      </div>
+
+      <button class="calc-btn" type="submit">Calculate Taxes</button>
+    </form>
+
+    <div id="results" class="results"></div>
+  </div>
+
+  <!-- Scenario Comparison -->
+  <div id="panel-compare" class="panel">
+    <p style="color:var(--muted);margin-bottom:16px;font-size:13px;">
+      Fill out Scenario A above using the Calculate tab, then adjust values here for Scenario B to compare.
+    </p>
+    <div class="section-title">Scenario B Overrides</div>
+    <div class="form-grid">
+      <div class="form-group"><label>W-2 Wages</label><input type="number" id="b_w2_wages" value="0" min="0" step="100"></div>
+      <div class="form-group"><label>Schedule C Gross</label><input type="number" id="b_sc_gross" value="0" min="0" step="100"></div>
+      <div class="form-group"><label>Office Expense</label><input type="number" id="b_sc_office" value="0" min="0"></div>
+      <div class="form-group"><label>Home Office (sqft)</label><input type="number" id="b_sc_home_office" value="0" min="0" max="300"></div>
+      <div class="form-group"><label>Dependents Under 17</label><input type="number" id="b_dependents" value="0" min="0"></div>
+      <div class="form-group">
+        <label>Filing Status</label>
+        <select id="b_filing_status">
+          <option value="single">Single</option>
+          <option value="married_filing_jointly">Married Filing Jointly</option>
+          <option value="married_filing_separately">Married Filing Separately</option>
+          <option value="head_of_household">Head of Household</option>
+        </select>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="handleCompare()">Compare Scenarios</button>
+    <div id="compare-results" class="results"></div>
+  </div>
+</div>
+
+<script>
+const API = ''; // Same origin when served by FastAPI
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (name === 'single' && i === 0) || (name === 'compare' && i === 1));
+  });
+  document.getElementById('panel-single').classList.toggle('active', name === 'single');
+  document.getElementById('panel-compare').classList.toggle('active', name === 'compare');
+}
+
+function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function str(id) { return document.getElementById(id).value; }
+function fmt(n) { return '$' + n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+function pct(n) { return (n * 100).toFixed(2) + '%'; }
+
+function buildPayloadFromForm() {
+  const payload = {
+    profile: {
+      filing_status: str('filing_status'),
+      dependents_under_17: val('dependents'),
+      tax_year: 2025,
+    },
+    income: {
+      w2_wages: val('w2_wages'),
+      interest_income: val('interest_income'),
+      dividend_income: val('dividend_income'),
+      other_income: val('other_income'),
+    },
+    deductions: {
+      mortgage_interest: val('mortgage_interest'),
+      state_and_local_taxes: val('salt'),
+      charitable_contributions: val('charitable'),
+      medical_expenses: val('medical'),
+    },
+  };
+  const scGross = val('sc_gross');
+  if (scGross > 0) {
+    payload.schedule_c = {
+      gross_income: scGross,
+      advertising: val('sc_advertising'),
+      car_and_truck: val('sc_car'),
+      office_expense: val('sc_office'),
+      supplies: val('sc_supplies'),
+      travel: val('sc_travel'),
+      meals: val('sc_meals'),
+      utilities: val('sc_utilities'),
+      other_expenses: val('sc_other'),
+      home_office_sqft: val('sc_home_office'),
+    };
+  }
+  return payload;
+}
+
+function renderBreakdown(b) {
+  const rows = [
+    {section: 'Income'},
+    {label: 'Total Income', value: fmt(b.total_income)},
+    {label: 'Schedule C Net Profit', value: fmt(b.schedule_c_net_profit)},
+    {label: 'SE Tax Deduction', value: fmt(b.se_tax_deduction)},
+    {label: 'Adjusted Gross Income', value: fmt(b.adjusted_gross_income)},
+    {section: 'Deductions'},
+    {label: 'Standard Deduction', value: fmt(b.standard_deduction)},
+    {label: 'Itemized Deduction', value: fmt(b.itemized_deduction)},
+    {label: 'Deduction Used', value: b.deduction_used.toUpperCase(), cls: 'highlight'},
+    {label: 'Deduction Amount', value: fmt(b.deduction_amount)},
+    {label: 'QBI Deduction', value: fmt(b.qbi_deduction)},
+    {label: 'Home Office Deduction', value: fmt(b.home_office_deduction)},
+    {section: 'Tax'},
+    {label: 'Taxable Income', value: fmt(b.taxable_income)},
+    {label: 'Federal Income Tax', value: fmt(b.income_tax), cls: 'warn'},
+    {label: 'Self-Employment Tax', value: fmt(b.self_employment_tax), cls: 'warn'},
+    {label: 'Child Tax Credit', value: fmt(b.child_tax_credit), cls: 'highlight'},
+    {section: 'Total'},
+    {label: 'Total Tax', value: fmt(b.total_tax), cls: 'warn'},
+    {label: 'Effective Rate', value: pct(b.effective_rate)},
+    {label: 'Marginal Rate', value: pct(b.marginal_rate)},
+  ];
+
+  let html = '';
+  let inCard = false;
+  rows.forEach(r => {
+    if (r.section) {
+      if (inCard) html += '</div>';
+      html += `<div class="result-card"><h3>${r.section}</h3>`;
+      inCard = true;
+    } else {
+      html += `<div class="result-row ${r.cls || ''}"><span class="label">${r.label}</span><span class="value">${r.value}</span></div>`;
+    }
+  });
+  if (inCard) html += '</div>';
+  return html;
+}
+
+async function handleCalculate(e) {
+  e.preventDefault();
+  const payload = buildPayloadFromForm();
+  try {
+    const resp = await fetch(API + '/api/calculate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    if (!resp.ok) throw new Error('API error: ' + resp.status);
+    const data = await resp.json();
+    const el = document.getElementById('results');
+    el.innerHTML = renderBreakdown(data.breakdown);
+    el.classList.add('visible');
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function handleCompare() {
+  const scenarioA = buildPayloadFromForm();
+  const scenarioB = JSON.parse(JSON.stringify(scenarioA));
+
+  // Apply overrides for Scenario B
+  scenarioB.profile.filing_status = str('b_filing_status');
+  scenarioB.profile.dependents_under_17 = val('b_dependents');
+  scenarioB.income.w2_wages = val('b_w2_wages');
+  const bScGross = val('b_sc_gross');
+  if (bScGross > 0) {
+    scenarioB.schedule_c = scenarioB.schedule_c || {gross_income: 0};
+    scenarioB.schedule_c.gross_income = bScGross;
+    scenarioB.schedule_c.office_expense = val('b_sc_office');
+    scenarioB.schedule_c.home_office_sqft = val('b_sc_home_office');
+  } else {
+    delete scenarioB.schedule_c;
+  }
+
+  try {
+    const resp = await fetch(API + '/api/scenario', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({scenario_a: scenarioA, scenario_b: scenarioB}),
+    });
+    if (!resp.ok) throw new Error('API error: ' + resp.status);
+    const data = await resp.json();
+
+    const el = document.getElementById('compare-results');
+    const diff = data.difference;
+    const diffClass = diff > 0 ? 'costs' : 'savings';
+    const diffLabel = diff > 0 ? 'Scenario A costs more' : 'Scenario A saves';
+
+    el.innerHTML = `
+      <div class="compare-grid">
+        <div class="compare-col"><h3>Scenario A</h3>${renderBreakdown(data.scenario_a.breakdown)}</div>
+        <div class="compare-col"><h3>Scenario B</h3>${renderBreakdown(data.scenario_b.breakdown)}</div>
+      </div>
+      <div class="diff-banner">
+        ${diffLabel}: <span class="${diffClass}">${fmt(Math.abs(diff))}</span>
+      </div>`;
+    el.classList.add('visible');
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+</script>
+</body>
+</html>
