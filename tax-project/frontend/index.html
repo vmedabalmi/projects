@@ -4,70 +4,111 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tax Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a1a;
-    --surface: #141428;
-    --border: #2a2a4a;
-    --accent: #6c5ce7;
-    --accent-hover: #7c6cf7;
-    --text: #e0e0f0;
-    --muted: #8888aa;
-    --green: #00b894;
-    --red: #e17055;
-    --yellow: #fdcb6e;
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --border-hover: #cbd5e1;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-light: #eef2ff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --muted: #94a3b8;
+    --green: #059669;
+    --green-bg: #ecfdf5;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --yellow: #d97706;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    --radius: 12px;
+    --radius-sm: 8px;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: 'Courier New', monospace;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    padding: 20px;
+    padding: 32px 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .header-badge {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
   }
   h1 {
-    text-align: center;
-    font-size: 28px;
-    margin-bottom: 8px;
-    color: var(--accent);
-    letter-spacing: 2px;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
   }
   .subtitle {
-    text-align: center;
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 30px;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 400;
   }
   .container {
-    max-width: 900px;
+    max-width: 880px;
     margin: 0 auto;
   }
   .tabs {
     display: flex;
     gap: 4px;
-    margin-bottom: 20px;
-  }
-  .tab {
-    padding: 10px 20px;
+    margin-bottom: 24px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-bottom: none;
-    color: var(--muted);
+    padding: 4px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  .tab {
+    flex: 1;
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
     cursor: pointer;
     font-family: inherit;
-    font-size: 13px;
-    border-radius: 6px 6px 0 0;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+  }
+  .tab:hover {
+    color: var(--text);
+    background: var(--bg);
   }
   .tab.active {
-    background: var(--border);
-    color: var(--text);
+    background: var(--accent);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
   }
   .panel {
     display: none;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 0 8px 8px 8px;
-    padding: 24px;
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow-md);
   }
   .panel.active { display: block; }
   .form-grid {
@@ -78,115 +119,168 @@
   .form-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
   .form-group.full { grid-column: 1 / -1; }
   label {
-    font-size: 12px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
   }
   input, select {
     background: var(--bg);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 10px 12px;
-    border-radius: 4px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
     font-family: inherit;
     font-size: 14px;
+    transition: all 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+  input:hover, select:hover {
+    border-color: var(--border-hover);
   }
   input:focus, select:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
   }
   .section-title {
-    font-size: 14px;
-    color: var(--accent);
-    margin: 20px 0 12px 0;
-    padding-bottom: 6px;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 600;
+    margin: 28px 0 14px 0;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--border);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
   }
   .section-title:first-child { margin-top: 0; }
   button.calc-btn {
     display: block;
     width: 100%;
-    margin-top: 24px;
+    margin-top: 28px;
     padding: 14px;
     background: var(--accent);
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     font-family: inherit;
-    font-size: 16px;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
   }
-  button.calc-btn:hover { background: var(--accent-hover); }
+  button.calc-btn:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+    transform: translateY(-1px);
+  }
+  button.calc-btn:active {
+    transform: translateY(0);
+  }
   /* Results */
-  .results { margin-top: 24px; display: none; }
+  .results { margin-top: 28px; display: none; }
   .results.visible { display: block; }
   .result-card {
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px;
+    border-radius: var(--radius);
+    padding: 20px 24px;
     margin-bottom: 16px;
   }
   .result-card h3 {
-    font-size: 13px;
-    color: var(--accent);
+    font-size: 12px;
+    color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    margin-bottom: 14px;
   }
   .result-row {
     display: flex;
     justify-content: space-between;
-    padding: 6px 0;
+    align-items: center;
+    padding: 8px 0;
     border-bottom: 1px solid var(--border);
     font-size: 14px;
   }
   .result-row:last-child { border-bottom: none; }
-  .result-row .label { color: var(--muted); }
-  .result-row .value { font-weight: bold; }
-  .result-row.highlight .value { color: var(--green); font-size: 16px; }
-  .result-row.warn .value { color: var(--red); }
+  .result-row .label { color: var(--text-secondary); }
+  .result-row .value { font-weight: 600; color: var(--text); }
+  .result-row.highlight .value {
+    color: var(--green);
+    background: var(--green-bg);
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 15px;
+  }
+  .result-row.warn .value {
+    color: var(--red);
+    background: var(--red-bg);
+    padding: 2px 10px;
+    border-radius: 6px;
+  }
   /* Comparison */
   .compare-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 24px;
   }
   .compare-col h3 {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     color: var(--accent);
     font-size: 14px;
+    font-weight: 600;
   }
   .diff-banner {
     text-align: center;
-    padding: 16px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin-top: 16px;
+    padding: 20px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 20px;
     font-size: 18px;
+    font-weight: 500;
   }
-  .diff-banner .savings { color: var(--green); font-weight: bold; }
-  .diff-banner .costs { color: var(--red); font-weight: bold; }
+  .diff-banner .savings {
+    color: var(--green);
+    font-weight: 700;
+    background: var(--green-bg);
+    padding: 4px 14px;
+    border-radius: 8px;
+  }
+  .diff-banner .costs {
+    color: var(--red);
+    font-weight: 700;
+    background: var(--red-bg);
+    padding: 4px 14px;
+    border-radius: 8px;
+  }
   @media (max-width: 700px) {
     .form-grid, .compare-grid { grid-template-columns: 1fr; }
+    body { padding: 16px; }
+    .panel { padding: 20px; }
   }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>TAX PLANNER</h1>
-  <p class="subtitle">2025 Federal Tax Calculator &mdash; 1040 + Schedule C</p>
+  <div class="header">
+    <div class="header-badge">2025 Federal</div>
+    <h1>Tax Planner</h1>
+    <p class="subtitle">1040 + Schedule C Calculator</p>
+  </div>
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('single')">Calculate</button>
@@ -251,8 +345,8 @@
 
   <!-- Scenario Comparison -->
   <div id="panel-compare" class="panel">
-    <p style="color:var(--muted);margin-bottom:16px;font-size:13px;">
-      Fill out Scenario A above using the Calculate tab, then adjust values here for Scenario B to compare.
+    <p style="color:var(--text-secondary);margin-bottom:16px;font-size:14px;">
+      Fill out Scenario A using the Calculate tab, then adjust values here for Scenario B to compare.
     </p>
     <div class="section-title">Scenario B Overrides</div>
     <div class="form-grid">
