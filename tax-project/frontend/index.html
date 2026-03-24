@@ -370,9 +370,8 @@
   </div>
 </div>
 
+<script src="tax-engine.js"></script>
 <script>
-const API = ''; // Same origin when served by FastAPI
-
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t, i) => {
     t.classList.toggle('active', (name === 'single' && i === 0) || (name === 'compare' && i === 1));
@@ -464,30 +463,19 @@ function renderBreakdown(b) {
   return html;
 }
 
-async function handleCalculate(e) {
+function handleCalculate(e) {
   e.preventDefault();
   const payload = buildPayloadFromForm();
-  try {
-    const resp = await fetch(API + '/api/calculate', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
-    });
-    if (!resp.ok) throw new Error('API error: ' + resp.status);
-    const data = await resp.json();
-    const el = document.getElementById('results');
-    el.innerHTML = renderBreakdown(data.breakdown);
-    el.classList.add('visible');
-  } catch (err) {
-    alert('Error: ' + err.message);
-  }
+  const data = calculate(payload);
+  const el = document.getElementById('results');
+  el.innerHTML = renderBreakdown(data.breakdown);
+  el.classList.add('visible');
 }
 
-async function handleCompare() {
+function handleCompare() {
   const scenarioA = buildPayloadFromForm();
   const scenarioB = JSON.parse(JSON.stringify(scenarioA));
 
-  // Apply overrides for Scenario B
   scenarioB.profile.filing_status = str('b_filing_status');
   scenarioB.profile.dependents_under_17 = val('b_dependents');
   scenarioB.income.w2_wages = val('b_w2_wages');
@@ -501,32 +489,22 @@ async function handleCompare() {
     delete scenarioB.schedule_c;
   }
 
-  try {
-    const resp = await fetch(API + '/api/scenario', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({scenario_a: scenarioA, scenario_b: scenarioB}),
-    });
-    if (!resp.ok) throw new Error('API error: ' + resp.status);
-    const data = await resp.json();
+  const resultA = calculate(scenarioA);
+  const resultB = calculate(scenarioB);
+  const diff = resultA.breakdown.total_tax - resultB.breakdown.total_tax;
+  const diffClass = diff > 0 ? 'costs' : 'savings';
+  const diffLabel = diff > 0 ? 'Scenario A costs more' : 'Scenario A saves';
 
-    const el = document.getElementById('compare-results');
-    const diff = data.difference;
-    const diffClass = diff > 0 ? 'costs' : 'savings';
-    const diffLabel = diff > 0 ? 'Scenario A costs more' : 'Scenario A saves';
-
-    el.innerHTML = `
-      <div class="compare-grid">
-        <div class="compare-col"><h3>Scenario A</h3>${renderBreakdown(data.scenario_a.breakdown)}</div>
-        <div class="compare-col"><h3>Scenario B</h3>${renderBreakdown(data.scenario_b.breakdown)}</div>
-      </div>
-      <div class="diff-banner">
-        ${diffLabel}: <span class="${diffClass}">${fmt(Math.abs(diff))}</span>
-      </div>`;
-    el.classList.add('visible');
-  } catch (err) {
-    alert('Error: ' + err.message);
-  }
+  const el = document.getElementById('compare-results');
+  el.innerHTML = `
+    <div class="compare-grid">
+      <div class="compare-col"><h3>Scenario A</h3>${renderBreakdown(resultA.breakdown)}</div>
+      <div class="compare-col"><h3>Scenario B</h3>${renderBreakdown(resultB.breakdown)}</div>
+    </div>
+    <div class="diff-banner">
+      ${diffLabel}: <span class="${diffClass}">${fmt(Math.abs(diff))}</span>
+    </div>`;
+  el.classList.add('visible');
 }
 </script>
 </body>
