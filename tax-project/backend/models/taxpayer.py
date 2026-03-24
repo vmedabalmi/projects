@@ -1,6 +1,7 @@
 """Pydantic models for taxpayer input data and tax results."""
 
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -146,9 +147,9 @@ class DeductionData(BaseModel):
 class TaxInput(BaseModel):
     profile: TaxpayerProfile = TaxpayerProfile()
     income: IncomeData = IncomeData()
-    schedule_c: ScheduleCData | None = None
-    schedule_d: ScheduleDData | None = None
-    schedule_e: ScheduleEData | None = None
+    schedule_c: Optional[ScheduleCData] = None
+    schedule_d: Optional[ScheduleDData] = None
+    schedule_e: Optional[ScheduleEData] = None
     deductions: DeductionData = DeductionData()
 
 

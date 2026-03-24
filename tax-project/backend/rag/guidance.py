@@ -6,6 +6,7 @@ No external vector DB required — suitable for the ~dozen-entry corpus.
 
 import json
 from pathlib import Path
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -25,7 +26,7 @@ class GuidanceResult(BaseModel):
     relevance: float  # 0.0–1.0 score
 
 
-_entries: list[GuidanceEntry] | None = None
+_entries: Optional[list[GuidanceEntry]] = None
 
 
 def _load_entries() -> list[GuidanceEntry]:
