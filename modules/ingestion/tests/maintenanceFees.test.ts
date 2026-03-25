@@ -56,7 +56,7 @@ describe("Maintenance Fees adapter", () => {
   test("transformMaintenanceFee maps fields correctly", () => {
     const partial = transformMaintenanceFee(sampleRecord);
 
-    expect(partial.patentId).toBe("10000000");
+    expect(partial.patentId).toBe("US10000000");
     expect(partial.maintenanceFeeStatus).toBeDefined();
     expect(partial.maintenanceFeeStatus?.expired).toBe(false);
     expect(partial.maintenanceFeeStatus?.smallEntityStatus).toBe(false);

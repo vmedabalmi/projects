@@ -83,7 +83,7 @@ describe("PatentsView adapter", () => {
   test("transformPatentsView maps fields correctly", () => {
     const partial = transformPatentsView(sampleRecord);
 
-    expect(partial.patentId).toBe("10000000");
+    expect(partial.patentId).toBe("US10000000");
     expect(partial.patentType).toBe("utility");
     expect(partial.patentDate).toBe("2018-06-19");
     expect(partial.applicationDate).toBe("2015-03-10");

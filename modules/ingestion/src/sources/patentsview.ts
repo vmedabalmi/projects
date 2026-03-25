@@ -1,5 +1,6 @@
 import { fetchWithRetry } from "../fetcher";
 import { writeRawRecord } from "../storage";
+import { ensureUSPrefix } from "../util";
 import type { PatentRecord } from "../types/index";
 import type {
   RawPatentsViewRecord,
@@ -143,7 +144,7 @@ export function transformPatentsView(
   const cpcCodes = raw.cpcs.map((c) => c.cpc_subgroup_id);
 
   return {
-    patentId: raw.patent_id,
+    patentId: ensureUSPrefix(raw.patent_id),
     patentType: raw.patent_type,
     patentDate: raw.patent_date,
     applicationDate: raw.app_date,

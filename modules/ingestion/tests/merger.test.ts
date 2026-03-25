@@ -4,7 +4,7 @@ import type { PatentRecord } from "../src/types/index";
 describe("merger", () => {
   test("merges fields from multiple sources", () => {
     const pvPartial: Partial<PatentRecord> = {
-      patentId: "10000000",
+      patentId: "US10000000",
       patentType: "utility",
       patentDate: "2018-06-19",
       applicationDate: "2015-03-10",
@@ -15,7 +15,7 @@ describe("merger", () => {
     };
 
     const mfPartial: Partial<PatentRecord> = {
-      patentId: "10000000",
+      patentId: "US10000000",
       maintenanceFeeStatus: {
         feeWindows: [
           {
@@ -31,13 +31,13 @@ describe("merger", () => {
     };
 
     const pcPartial: Partial<PatentRecord> = {
-      patentId: "10000000",
+      patentId: "US10000000",
       ptaDays: 210,
     };
 
     const merged = mergePartials([pvPartial, mfPartial, pcPartial]);
 
-    expect(merged.patentId).toBe("10000000");
+    expect(merged.patentId).toBe("US10000000");
     expect(merged.title).toBe("Coherent LADAR");
     expect(merged.maintenanceFeeStatus?.expired).toBe(false);
     expect(merged.ptaDays).toBe(210);
@@ -48,12 +48,12 @@ describe("merger", () => {
 
   test("later sources override earlier for the same field", () => {
     const first: Partial<PatentRecord> = {
-      patentId: "10000000",
+      patentId: "US10000000",
       title: "Old title",
     };
 
     const second: Partial<PatentRecord> = {
-      patentId: "10000000",
+      patentId: "US10000000",
       title: "Updated title",
     };
 
@@ -68,12 +68,12 @@ describe("merger", () => {
 
   test("handles single source with partial data", () => {
     const partial: Partial<PatentRecord> = {
-      patentId: "10000000",
+      patentId: "US10000000",
       ptaDays: 100,
     };
 
     const merged = mergePartials([partial]);
-    expect(merged.patentId).toBe("10000000");
+    expect(merged.patentId).toBe("US10000000");
     expect(merged.ptaDays).toBe(100);
     expect(merged.title).toBeUndefined();
     expect(merged.maintenanceFeeStatus).toBeUndefined();

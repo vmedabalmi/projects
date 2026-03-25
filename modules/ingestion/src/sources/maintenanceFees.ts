@@ -1,5 +1,6 @@
 import { fetchWithRetry } from "../fetcher";
 import { writeRawRecord } from "../storage";
+import { ensureUSPrefix } from "../util";
 import type { PatentRecord, MaintenanceFeeStatus, FeeWindow } from "../types/index";
 import type { RawMaintenanceFeeRecord } from "../types/raw";
 
@@ -43,7 +44,7 @@ export function transformMaintenanceFee(
   };
 
   return {
-    patentId: raw.patent_number,
+    patentId: ensureUSPrefix(raw.patent_number),
     maintenanceFeeStatus,
   };
 }

@@ -56,7 +56,7 @@ describe("Patent Center adapter", () => {
   test("transformPatentCenter maps fields correctly", () => {
     const partial = transformPatentCenter(sampleRecord);
 
-    expect(partial.patentId).toBe("10000000");
+    expect(partial.patentId).toBe("US10000000");
     expect(partial.ptaDays).toBe(210);
     // Fields not provided by this source
     expect(partial.title).toBeUndefined();

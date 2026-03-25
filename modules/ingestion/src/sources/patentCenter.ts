@@ -1,5 +1,6 @@
 import { fetchWithRetry } from "../fetcher";
 import { writeRawRecord } from "../storage";
+import { ensureUSPrefix } from "../util";
 import type { PatentRecord } from "../types/index";
 import type { RawPatentCenterRecord } from "../types/raw";
 
@@ -33,7 +34,7 @@ export function transformPatentCenter(
   raw: RawPatentCenterRecord
 ): Partial<PatentRecord> {
   return {
-    patentId: raw.patent_number,
+    patentId: ensureUSPrefix(raw.patent_number),
     ptaDays: raw.pta_days,
   };
 }
