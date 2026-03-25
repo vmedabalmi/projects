@@ -1,0 +1,9 @@
+This directory stores normalized patent data artifacts. Do not commit actual data files.
+
+Directory structure:
+  data/
+    normalized/
+      {patentId}.json     — Fully validated and normalized PatentRecord per patent
+
+All files are written atomically (write to .tmp.json, then rename).
+Each file includes a _normalizedAt ISO timestamp for traceability.
