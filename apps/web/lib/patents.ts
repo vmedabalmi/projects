@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import type { PatentDisplayRecord, UrgencyLabel, PatentType } from "./types";
-import { mockPatents } from "./mockPatents";
 
 const PIPELINE_DIR = path.resolve(
   process.cwd(),
@@ -72,10 +71,7 @@ function readPipelinePatents(): PatentDisplayRecord[] {
 }
 
 export function getAllPatents(): PatentDisplayRecord[] {
-  const pipeline = readPipelinePatents();
-  const pipelineIds = new Set(pipeline.map((p) => p.patentId));
-  const mocks = mockPatents.filter((m) => !pipelineIds.has(m.patentId));
-  return [...pipeline, ...mocks];
+  return readPipelinePatents();
 }
 
 export function getPatentById(id: string): PatentDisplayRecord | undefined {
