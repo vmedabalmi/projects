@@ -1,0 +1,13 @@
+This directory stores runtime patent data artifacts. Do not commit actual data files.
+
+Directory structure:
+  data/
+    raw/
+      patentsview/        — RawPatentsViewRecord JSON files, keyed by patentId
+      maintenance-fees/   — RawMaintenanceFeeRecord JSON files, keyed by patentId
+      patent-center/      — RawPatentCenterRecord JSON files, keyed by patentId
+    merged/
+      {patentId}.json     — Final merged Partial<PatentRecord> per patent
+
+All files are written atomically (write to .tmp.json, then rename).
+Each file includes a _fetchedAt ISO timestamp for traceability.
