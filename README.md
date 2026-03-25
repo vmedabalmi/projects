@@ -5,10 +5,10 @@ A modular patent data pipeline that ingests, normalizes, and analyzes USPTO pate
 ## Architecture
 
 ```
-USPTO APIs ──► ingestion ──► normalization ──► expiration ──► event-detection
-                  │               │                │               │
-              data/merged/   data/normalized/   (calculates     (monitors
-              raw partials   validated records   term dates)     changes)
+USPTO APIs ──► ingestion ──► normalization ──► expiration-pipeline ──► event-detection
+                  │               │                    │                     │
+              data/merged/   data/normalized/    data/expiration/       (monitors
+              raw partials   validated records   enriched results        changes)
 ```
 
 ## Modules
@@ -17,7 +17,8 @@ USPTO APIs ──► ingestion ──► normalization ──► expiration ─�
 |--------|--------|-------------|
 | `ingestion` | 🟢 Active | Fetches raw patent data from PatentsView, Maintenance Fee, and Patent Center APIs |
 | `normalization` | 🟢 Active | Transforms merged partials into validated PatentRecord objects |
-| `expiration` | 🔲 Planned | Calculates patent expiration dates from normalized records |
+| `expiration` | 🟢 Active | Core patent expiration date calculation logic |
+| `expiration-pipeline` | 🟢 Active | Enriches expiration data with urgency labels, summaries, and lookahead windows |
 | `event-detection` | 🔲 Planned | Monitors patent lifecycle events and status changes |
 
 ## Quick start
@@ -38,6 +39,16 @@ npx ts-node -e "
   import { normalize } from './src/index';
   normalize('US10000000').then(r => console.log(JSON.stringify(r, null, 2)));
 "
+
+# 3. Expiration pipeline — calculate and enrich
+cd modules/expiration-pipeline
+npm install && npm run build
+npx ts-node -e "
+  import { expireAll } from './src/index';
+  expireAll().then(results => {
+    results.forEach(r => console.log(r.patentId, r.editorial.urgencyLabel, r.daysUntilExpiration + ' days'));
+  });
+"
 ```
 
 ## Development
@@ -55,5 +66,5 @@ npm test         # Jest tests
 
 1. **Ingestion** fetches from three USPTO sources, writes raw records to `data/raw/`, merges into `data/merged/{patentId}.json`
 2. **Normalization** reads merged records, validates/coerces fields, writes to `data/normalized/{patentId}.json`
-3. **Expiration** (planned) reads normalized records and calculates patent term expiration dates
+3. **Expiration pipeline** reads normalized records, calculates expiration dates, enriches with urgency labels/summaries/lookahead windows, writes to `data/expiration/{patentId}.json`
 4. **Event detection** (planned) monitors for lifecycle changes across patent portfolios
