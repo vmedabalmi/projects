@@ -3,8 +3,6 @@ export type {
   UrgencyLabel,
   LookaheadWindow,
   Editorial,
-  PatentRecord,
-  ExpirationResult,
   ExpirationFactor,
 } from "./types";
 
@@ -14,7 +12,7 @@ export { listNormalizedPatentIds, readNormalizedRecord, writeExpirationResult } 
 
 import pino from "pino";
 import { calculateExpiration } from "@patentproject/expiration";
-import type { PatentRecord } from "@patentproject/expiration";
+import type { ExpirationResult, PatentRecord } from "@patentproject/expiration";
 import { buildEditorial } from "./enricher";
 import { buildLookaheadWindows } from "./lookahead";
 import {
@@ -22,9 +20,56 @@ import {
   readNormalizedRecord,
   writeExpirationResult,
 } from "./storage";
-import type { ExpirationPipelineResult } from "./types";
+import type { ExpirationPipelineResult, ExpirationFactor } from "./types";
 
 const logger = pino({ name: "expiration-pipeline" });
+
+function dateToString(date: Date | string): string {
+  if (typeof date === "string") return date;
+  return date.toISOString().split("T")[0];
+}
+
+/**
+ * Convert the new ExpirationResult breakdown into pipeline factors.
+ */
+function extractFactors(result: ExpirationResult): ExpirationFactor[] {
+  const factors: ExpirationFactor[] = [];
+  const bd = result.breakdown;
+
+  if (bd.ptaDaysAdded > 0) {
+    factors.push({
+      type: "PTA",
+      description: `Patent Term Adjustment: +${bd.ptaDaysAdded} days`,
+      daysAdjusted: bd.ptaDaysAdded,
+    });
+  }
+
+  if (bd.pteDaysAdded > 0) {
+    factors.push({
+      type: "PTE",
+      description: `Patent Term Extension: +${bd.pteDaysAdded} days`,
+      daysAdjusted: bd.pteDaysAdded,
+    });
+  }
+
+  if (bd.terminalDisclaimerApplied) {
+    factors.push({
+      type: "TERMINAL_DISCLAIMER",
+      description: "Terminal disclaimer filed — expiration capped by related patent",
+      daysAdjusted: 0,
+    });
+  }
+
+  if (bd.lapsedEarlyDueToFees) {
+    factors.push({
+      type: "MAINTENANCE_FEE_LAPSE",
+      description: `Maintenance fee lapse at ${bd.lapseWindow ?? "unknown"} window`,
+      daysAdjusted: 0,
+    });
+  }
+
+  return factors;
+}
 
 /**
  * Process a record directly (no I/O). Useful for testing.
@@ -36,15 +81,18 @@ export function expireRecord(
   const expirationResult = calculateExpiration(record);
   const { editorial, daysUntilExpiration } = buildEditorial(expirationResult, now);
   const lookahead = buildLookaheadWindows(daysUntilExpiration, now);
+  const factors = extractFactors(expirationResult);
+
+  const totalAdjusted = expirationResult.breakdown.ptaDaysAdded + expirationResult.breakdown.pteDaysAdded;
 
   return {
     patentId: expirationResult.patentId,
-    expirationDate: expirationResult.expirationDate,
-    baseExpirationDate: expirationResult.baseExpirationDate,
-    adjustedDays: expirationResult.adjustedDays,
+    expirationDate: dateToString(expirationResult.expirationDate),
+    baseExpirationDate: dateToString(expirationResult.breakdown.baseExpirationDate),
+    adjustedDays: totalAdjusted,
     daysUntilExpiration,
     confidence: expirationResult.confidence,
-    factors: expirationResult.factors,
+    factors,
     editorial,
     lookahead,
   };

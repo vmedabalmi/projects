@@ -1,19 +1,24 @@
 import type { ExpirationResult } from "@patentproject/expiration";
-import { Confidence } from "@patentproject/expiration";
+import { ExpirationConfidence } from "@patentproject/expiration";
 import type { UrgencyLabel, Editorial } from "./types";
 
 const MS_PER_DAY = 86_400_000;
+
+function dateToString(date: Date | string): string {
+  if (typeof date === "string") return date;
+  return date.toISOString().split("T")[0];
+}
 
 /**
  * Calculate days from today until the expiration date.
  * Negative means already expired.
  */
 export function calculateDaysUntilExpiration(
-  expirationDate: string,
+  expirationDate: string | Date,
   now?: Date
 ): number {
   const today = now ?? new Date();
-  const expDate = new Date(expirationDate);
+  const expDate = typeof expirationDate === "string" ? new Date(expirationDate) : expirationDate;
   const todayMidnight = new Date(
     today.getFullYear(),
     today.getMonth(),
@@ -36,7 +41,7 @@ export function determineUrgencyLabel(
   daysUntilExpiration: number,
   confidence: string
 ): UrgencyLabel {
-  if (confidence === Confidence.INDETERMINATE) {
+  if (confidence === ExpirationConfidence.INDETERMINATE) {
     return "INDETERMINATE";
   }
   if (daysUntilExpiration <= 0) {
@@ -86,6 +91,7 @@ export function buildEditorial(
   result: ExpirationResult,
   now?: Date
 ): { editorial: Editorial; daysUntilExpiration: number } {
+  const expDateStr = dateToString(result.expirationDate);
   const daysUntilExpiration = calculateDaysUntilExpiration(
     result.expirationDate,
     now
@@ -98,7 +104,7 @@ export function buildEditorial(
     result.patentId,
     daysUntilExpiration,
     urgencyLabel,
-    result.expirationDate
+    expDateStr
   );
 
   return {

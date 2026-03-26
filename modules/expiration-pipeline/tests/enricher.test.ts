@@ -5,7 +5,11 @@ import {
   buildEditorial,
 } from "../src/enricher";
 import type { ExpirationResult } from "@patentproject/expiration";
-import { Confidence } from "@patentproject/expiration";
+import { ExpirationConfidence, PatentType } from "@patentproject/expiration";
+
+function d(dateStr: string): Date {
+  return new Date(dateStr + "T00:00:00Z");
+}
 
 describe("calculateDaysUntilExpiration", () => {
   test("returns positive days for future expiration", () => {
@@ -29,33 +33,33 @@ describe("calculateDaysUntilExpiration", () => {
 
 describe("determineUrgencyLabel", () => {
   test("EXPIRED when days <= 0", () => {
-    expect(determineUrgencyLabel(0, Confidence.HIGH)).toBe("EXPIRED");
-    expect(determineUrgencyLabel(-10, Confidence.HIGH)).toBe("EXPIRED");
+    expect(determineUrgencyLabel(0, ExpirationConfidence.HIGH)).toBe("EXPIRED");
+    expect(determineUrgencyLabel(-10, ExpirationConfidence.HIGH)).toBe("EXPIRED");
   });
 
   test("CRITICAL when days <= 30", () => {
-    expect(determineUrgencyLabel(1, Confidence.HIGH)).toBe("CRITICAL");
-    expect(determineUrgencyLabel(30, Confidence.HIGH)).toBe("CRITICAL");
+    expect(determineUrgencyLabel(1, ExpirationConfidence.HIGH)).toBe("CRITICAL");
+    expect(determineUrgencyLabel(30, ExpirationConfidence.HIGH)).toBe("CRITICAL");
   });
 
   test("WARNING when days <= 90", () => {
-    expect(determineUrgencyLabel(31, Confidence.HIGH)).toBe("WARNING");
-    expect(determineUrgencyLabel(90, Confidence.HIGH)).toBe("WARNING");
+    expect(determineUrgencyLabel(31, ExpirationConfidence.HIGH)).toBe("WARNING");
+    expect(determineUrgencyLabel(90, ExpirationConfidence.HIGH)).toBe("WARNING");
   });
 
   test("UPCOMING when days <= 365", () => {
-    expect(determineUrgencyLabel(91, Confidence.HIGH)).toBe("UPCOMING");
-    expect(determineUrgencyLabel(365, Confidence.HIGH)).toBe("UPCOMING");
+    expect(determineUrgencyLabel(91, ExpirationConfidence.HIGH)).toBe("UPCOMING");
+    expect(determineUrgencyLabel(365, ExpirationConfidence.HIGH)).toBe("UPCOMING");
   });
 
   test("ACTIVE when days > 365", () => {
-    expect(determineUrgencyLabel(366, Confidence.HIGH)).toBe("ACTIVE");
-    expect(determineUrgencyLabel(5000, Confidence.HIGH)).toBe("ACTIVE");
+    expect(determineUrgencyLabel(366, ExpirationConfidence.HIGH)).toBe("ACTIVE");
+    expect(determineUrgencyLabel(5000, ExpirationConfidence.HIGH)).toBe("ACTIVE");
   });
 
   test("INDETERMINATE when confidence is INDETERMINATE", () => {
-    expect(determineUrgencyLabel(100, Confidence.INDETERMINATE)).toBe("INDETERMINATE");
-    expect(determineUrgencyLabel(-5, Confidence.INDETERMINATE)).toBe("INDETERMINATE");
+    expect(determineUrgencyLabel(100, ExpirationConfidence.INDETERMINATE)).toBe("INDETERMINATE");
+    expect(determineUrgencyLabel(-5, ExpirationConfidence.INDETERMINATE)).toBe("INDETERMINATE");
   });
 });
 
@@ -82,12 +86,22 @@ describe("generateSummary", () => {
 describe("buildEditorial", () => {
   test("builds complete editorial from expiration result", () => {
     const expirationResult: ExpirationResult = {
-      patentId: "10000000",
-      expirationDate: "2035-03-10",
-      baseExpirationDate: "2035-03-10",
-      adjustedDays: 0,
-      confidence: Confidence.HIGH,
-      factors: [],
+      patentId: "US10000000",
+      patentType: PatentType.UTILITY,
+      expirationDate: d("2035-03-10"),
+      breakdown: {
+        baseExpirationDate: d("2035-03-10"),
+        afterPTA: d("2035-03-10"),
+        afterPTE: d("2035-03-10"),
+        afterTerminalDisclaimer: d("2035-03-10"),
+        finalDate: d("2035-03-10"),
+        ptaDaysAdded: 0,
+        pteDaysAdded: 0,
+        terminalDisclaimerApplied: false,
+        lapsedEarlyDueToFees: false,
+      },
+      confidence: ExpirationConfidence.HIGH,
+      confidenceReasons: ["All data available"],
     };
 
     const now = new Date("2026-03-25");
@@ -95,6 +109,6 @@ describe("buildEditorial", () => {
 
     expect(daysUntilExpiration).toBeGreaterThan(365);
     expect(editorial.urgencyLabel).toBe("ACTIVE");
-    expect(editorial.summary).toContain("10000000");
+    expect(editorial.summary).toContain("US10000000");
   });
 });

@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import type { PatentRecord } from "@patentproject/expiration";
+import { PatentType } from "@patentproject/expiration";
 import type { ExpirationPipelineResult } from "./types";
 
 const DEFAULT_INPUT_DIR = path.resolve(
@@ -45,8 +46,16 @@ export async function listNormalizedPatentIds(): Promise<string[]> {
   }
 }
 
+function mapPatentType(raw: string): PatentType {
+  if (raw === "UTILITY" || raw === PatentType.UTILITY) return PatentType.UTILITY;
+  if (raw === "DESIGN" || raw === PatentType.DESIGN) return PatentType.DESIGN;
+  if (raw === "PLANT" || raw === PatentType.PLANT) return PatentType.PLANT;
+  return PatentType.UTILITY;
+}
+
 /**
- * Read a normalized patent record.
+ * Read a normalized patent record and convert string dates to Date objects
+ * to match the expiration module's PatentRecord interface.
  */
 export async function readNormalizedRecord(
   patentId: string
@@ -54,7 +63,15 @@ export async function readNormalizedRecord(
   const filePath = path.join(getInputDir(), `${patentId}.json`);
   try {
     const data = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(data) as PatentRecord;
+    const raw = JSON.parse(data) as Record<string, unknown>;
+
+    return {
+      patentId: raw.patentId as string,
+      patentType: mapPatentType(raw.patentType as string),
+      filingDate: new Date(raw.filingDate as string),
+      grantDate: new Date(raw.grantDate as string),
+      isInternational: (raw.isInternational as boolean) ?? false,
+    };
   } catch {
     return null;
   }

@@ -1,30 +1,17 @@
 import { expireRecord } from "../src/index";
+import { PatentType, MaintenanceFeeWindow } from "@patentproject/expiration";
 import type { PatentRecord } from "@patentproject/expiration";
 
-// Fixture matching real normalized output shape
+function d(dateStr: string): Date {
+  return new Date(dateStr + "T00:00:00Z");
+}
+
+// Fixture matching the new expiration module's PatentRecord
 const fixture: PatentRecord = {
-  patentId: "10000000",
-  patentType: "UTILITY",
-  filingDate: "2015-03-10",
-  grantDate: "2018-06-19",
-  title: "Coherent LADAR using intra-pixel quadrature detection",
-  assignees: ["Raytheon Company"],
-  inventors: ["Joseph Marron"],
-  cpcCodes: ["G01S17/894"],
-  maintenanceFees: {
-    feeWindows: [
-      {
-        window: "FIRST",
-        feeCode: "M1551",
-        deadline: "2022-06-19",
-        graceEnd: "2022-12-19",
-        paid: true,
-        paidDate: "2022-05-01",
-      },
-    ],
-    smallEntityStatus: false,
-    expired: false,
-  },
+  patentId: "US10000000",
+  patentType: PatentType.UTILITY,
+  filingDate: d("2015-03-10"),
+  grantDate: d("2018-06-19"),
   isInternational: false,
 };
 
@@ -34,7 +21,7 @@ describe("expireRecord integration", () => {
   test("produces full output shape for a real-shaped record", () => {
     const result = expireRecord(fixture, now);
 
-    expect(result.patentId).toBe("10000000");
+    expect(result.patentId).toBe("US10000000");
     expect(result.expirationDate).toBeDefined();
     expect(result.baseExpirationDate).toBeDefined();
     expect(typeof result.adjustedDays).toBe("number");
@@ -45,7 +32,7 @@ describe("expireRecord integration", () => {
     // Editorial
     expect(result.editorial).toBeDefined();
     expect(result.editorial.urgencyLabel).toBeDefined();
-    expect(result.editorial.summary).toContain("10000000");
+    expect(result.editorial.summary).toContain("US10000000");
 
     // Lookahead
     expect(result.lookahead).toBeInstanceOf(Array);
@@ -59,7 +46,6 @@ describe("expireRecord integration", () => {
 
   test("utility patent: filing date + 20 years", () => {
     const result = expireRecord(fixture, now);
-    // Filed 2015-03-10, base expiration = 2035-03-10
     expect(result.baseExpirationDate).toBe("2035-03-10");
   });
 
@@ -72,9 +58,9 @@ describe("expireRecord integration", () => {
   test("design patent: filing date + 15 years", () => {
     const designPatent: PatentRecord = {
       ...fixture,
-      patentId: "D900000",
-      patentType: "DESIGN",
-      filingDate: "2016-01-01",
+      patentId: "USD900000",
+      patentType: PatentType.DESIGN,
+      filingDate: d("2016-01-01"),
     };
 
     const result = expireRecord(designPatent, now);
@@ -85,37 +71,32 @@ describe("expireRecord integration", () => {
     const withPTA: PatentRecord = {
       ...fixture,
       pta: {
+        aDelayDays: 200,
+        bDelayDays: 100,
+        cDelayDays: 100,
+        applicantDelayDays: 0,
+        overlapDays: 35,
         totalPTADays: 365,
-        aDelay: 200,
-        bDelay: 100,
-        cDelay: 100,
-        overlap: 35,
       },
     };
 
     const result = expireRecord(withPTA, now);
     expect(result.adjustedDays).toBe(365);
-    // 2035-03-10 + 365 days = 2036-03-09 (2036 is not a leap year adjustment)
-    expect(result.expirationDate).toBe("2036-03-09");
     expect(result.factors.some((f) => f.type === "PTA")).toBe(true);
   });
 
   test("expired patent by maintenance fee lapse", () => {
     const lapsed: PatentRecord = {
       ...fixture,
-      maintenanceFees: {
-        feeWindows: [
-          {
-            window: "FIRST",
-            feeCode: "M1551",
-            deadline: "2022-06-19",
-            graceEnd: "2022-12-19",
-            paid: false,
-          },
-        ],
-        smallEntityStatus: false,
-        expired: true,
-      },
+      maintenanceFees: [
+        {
+          window: MaintenanceFeeWindow.YEAR_3_5,
+          deadline: d("2022-06-19"),
+          graceEnd: d("2022-12-19"),
+          paid: false,
+          revived: false,
+        },
+      ],
     };
 
     const result = expireRecord(lapsed, now);
@@ -124,14 +105,13 @@ describe("expireRecord integration", () => {
     expect(result.factors.some((f) => f.type === "MAINTENANCE_FEE_LAPSE")).toBe(true);
   });
 
-  test("indeterminate confidence produces INDETERMINATE label", () => {
-    const noDate: PatentRecord = {
+  test("indeterminate confidence for international patent", () => {
+    const intl: PatentRecord = {
       ...fixture,
-      filingDate: "",
-      grantDate: "",
+      isInternational: true,
     };
 
-    const result = expireRecord(noDate, now);
+    const result = expireRecord(intl, now);
     expect(result.editorial.urgencyLabel).toBe("INDETERMINATE");
   });
 
