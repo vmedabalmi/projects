@@ -5,21 +5,61 @@ A modular patent data pipeline that ingests, normalizes, and analyzes USPTO pate
 ## Architecture
 
 ```
-USPTO APIs ──► ingestion ──► normalization ──► expiration-pipeline ──► event-detection
-                  │               │                    │                     │
-              data/merged/   data/normalized/    data/expiration/       (monitors
-              raw partials   validated records   enriched results        changes)
+USPTO APIs ──► ingestion ──► normalization ──► expiration-pipeline ──► apps/web
+                  │               │                    │                   │
+              data/merged/   data/normalized/    data/expiration/     Prior Art
+              raw partials   validated records   enriched results     news site
 ```
 
 ## Modules
 
 | Module | Status | Description |
 |--------|--------|-------------|
-| `ingestion` | 🟢 Active | Fetches raw patent data from PatentsView, Maintenance Fee, and Patent Center APIs |
-| `normalization` | 🟢 Active | Transforms merged partials into validated PatentRecord objects |
-| `expiration` | 🟢 Active | Core patent expiration date calculation logic |
-| `expiration-pipeline` | 🟢 Active | Enriches expiration data with urgency labels, summaries, and lookahead windows |
-| `event-detection` | 🔲 Planned | Monitors patent lifecycle events and status changes |
+| `expiration` | 🟢 Active | Core calculation library — PTA, PTE, terminal disclaimers, maintenance fees |
+| `ingestion` | 🟢 Active | Fetches from USPTO PatentsView, Maintenance Fee, and Patent Center APIs |
+| `normalization` | 🟢 Active | Validates and coerces merged partials into typed PatentRecord objects |
+| `expiration-pipeline` | 🟢 Active | Enriches normalized records with urgency labels, summaries, and lookahead windows |
+| `event-detection` | 🔜 Planned | Emits structured PatentEvents (EXPIRATION, NEW_ISSUANCE, etc.) |
+| `enrichment` | 🔜 Planned | Adds company context, significance scores, technology classification |
+| `newsletter` | 🔜 Planned | Subscriber matching and digest generation |
+
+## Apps
+
+| App | Status | Description |
+|-----|--------|-------------|
+| `apps/web` | 🟢 Active | Prior Art — Next.js news website, 4 pages, 10 real patents |
+
+## Pipeline
+
+Current working data flow with 10 patents (US6000000 through US11000000):
+
+```
+ingestion (3 USPTO sources)
+    │
+    ├── data/raw/patentsview/{id}.json
+    ├── data/raw/maintenance-fees/{id}.json
+    └── data/merged/{id}.json
+            │
+normalization (validate + coerce)
+            │
+    └── data/normalized/{id}.json
+            │
+expiration-pipeline (calculate + enrich)
+            │
+    └── data/expiration/{id}.json
+            │
+apps/web (Prior Art)
+    └── Static pages: /, /browse, /about, /patents/[id]
+```
+
+## Test coverage
+
+| Module | Tests |
+|--------|-------|
+| `ingestion` | 14 |
+| `normalization` | 36 |
+| `expiration-pipeline` | 32 |
+| **Total** | **82** |
 
 ## Quick start
 
@@ -49,6 +89,11 @@ npx ts-node -e "
     results.forEach(r => console.log(r.patentId, r.editorial.urgencyLabel, r.daysUntilExpiration + ' days'));
   });
 "
+
+# 4. Web frontend
+cd apps/web
+npm install && npm run build
+npm run dev
 ```
 
 ## Development
@@ -67,4 +112,5 @@ npm test         # Jest tests
 1. **Ingestion** fetches from three USPTO sources, writes raw records to `data/raw/`, merges into `data/merged/{patentId}.json`
 2. **Normalization** reads merged records, validates/coerces fields, writes to `data/normalized/{patentId}.json`
 3. **Expiration pipeline** reads normalized records, calculates expiration dates, enriches with urgency labels/summaries/lookahead windows, writes to `data/expiration/{patentId}.json`
-4. **Event detection** (planned) monitors for lifecycle changes across patent portfolios
+4. **Prior Art (web)** reads expiration pipeline output at build time, generates static pages
+5. **Event detection** (planned) monitors for lifecycle changes across patent portfolios
