@@ -4,61 +4,81 @@ export enum PatentType {
   PLANT = "PLANT",
 }
 
-export enum Confidence {
+export enum MaintenanceFeeWindow {
+  YEAR_3_5 = "3.5yr",
+  YEAR_7_5 = "7.5yr",
+  YEAR_11_5 = "11.5yr",
+}
+
+export enum ExpirationConfidence {
   HIGH = "HIGH",
   MEDIUM = "MEDIUM",
   LOW = "LOW",
   INDETERMINATE = "INDETERMINATE",
 }
 
+export interface MaintenanceFeeRecord {
+  window: MaintenanceFeeWindow;
+  deadline: Date;
+  graceEnd: Date;
+  paid: boolean;
+  paymentDate?: Date;
+  revived: boolean;
+}
+
+export interface PTARecord {
+  aDelayDays: number;
+  bDelayDays: number;
+  cDelayDays: number;
+  applicantDelayDays: number;
+  overlapDays: number;
+  totalPTADays: number;
+}
+
+export interface PTERecord {
+  granted: boolean;
+  pendingApplication: boolean;
+  extensionDays: number;
+  fdaApprovalDate?: Date;
+  fdaApplicationDate?: Date;
+}
+
+export interface TerminalDisclaimer {
+  filedDate: Date;
+  limitingPatentId: string;
+  limitingDate: Date;
+}
+
 export interface PatentRecord {
   patentId: string;
-  patentType: PatentType | string;
-  filingDate: string;
-  grantDate: string;
-  title: string;
-  assignees: string[];
-  inventors: string[];
-  cpcCodes: string[];
-  maintenanceFees?: {
-    feeWindows: {
-      window: string;
-      feeCode: string;
-      deadline: string;
-      graceEnd: string;
-      paid: boolean;
-      paidDate?: string;
-    }[];
-    smallEntityStatus: boolean;
-    expired: boolean;
-  };
-  pta?: {
-    totalPTADays: number;
-    aDelay: number;
-    bDelay: number;
-    cDelay: number;
-    overlap: number;
-  };
-  pte?: {
-    extensionDays: number;
-    granted: boolean;
-    pendingApplication: boolean;
-  };
-  terminalDisclaimer?: boolean;
+  patentType: PatentType;
+  filingDate: Date;
+  grantDate: Date;
   isInternational: boolean;
+  pta?: PTARecord;
+  pte?: PTERecord;
+  terminalDisclaimer?: TerminalDisclaimer;
+  maintenanceFees?: MaintenanceFeeRecord[];
+}
+
+export interface ExpirationBreakdown {
+  baseExpirationDate: Date;
+  afterPTA: Date;
+  afterPTE: Date;
+  afterTerminalDisclaimer: Date;
+  finalDate: Date;
+  ptaDaysAdded: number;
+  pteDaysAdded: number;
+  terminalDisclaimerApplied: boolean;
+  lapsedEarlyDueToFees: boolean;
+  lapseWindow?: MaintenanceFeeWindow;
 }
 
 export interface ExpirationResult {
   patentId: string;
-  expirationDate: string;
-  baseExpirationDate: string;
-  adjustedDays: number;
-  confidence: Confidence;
-  factors: ExpirationFactor[];
-}
-
-export interface ExpirationFactor {
-  type: string;
-  description: string;
-  daysAdjusted: number;
+  patentType: PatentType;
+  expirationDate: Date;
+  breakdown: ExpirationBreakdown;
+  confidence: ExpirationConfidence;
+  confidenceReasons: string[];
 }
