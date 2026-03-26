@@ -1,0 +1,9 @@
+This directory stores expiration pipeline output artifacts. Do not commit actual data files.
+
+Directory structure:
+  data/
+    expiration/
+      {patentId}.json  — ExpirationPipelineResult per patent
+
+Each file includes a _calculatedAt ISO timestamp.
+All writes are atomic (.tmp.json → .json).

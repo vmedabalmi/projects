@@ -4,25 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A collection of browser-based games, each in its own folder. Games are single HTML files with no external dependencies — all rendering, logic, and assets are self-contained using HTML5 Canvas and vanilla JavaScript.
+PatentProject — a modular patent data pipeline that ingests, normalizes, and analyzes USPTO patent data. Each module lives in `modules/` with its own package.json, TypeScript config, and test suite.
 
 ## Structure
 
-- `shooter/` — Top-down 2D retro shooter (arrow keys + mouse aiming, 5 levels, 3 enemy types + boss)
+- `modules/ingestion/` — Fetches raw patent data from USPTO APIs (PatentsView, Maintenance Fees, Patent Center)
+- `modules/normalization/` — Validates, cleans, and coerces ingested data into typed PatentRecord objects
+- `modules/expiration/` — (planned) Calculates patent expiration dates
+- `modules/event-detection/` — (planned) Monitors patent lifecycle events
 
 ## Development
 
-Games are plain HTML files. To run or test, open them directly in a browser:
+Each module is independent. To work on a module:
+```bash
+cd modules/<module>
+npm install
+npm run build    # TypeScript compile (strict mode)
+npm test         # Jest tests
 ```
-open shooter/shooter.html
-```
-
-No build step, no package manager, no dependencies.
 
 ## Conventions
 
-- Each game lives in its own folder
-- All sprites/graphics are drawn programmatically on canvas (no image assets)
-- Games use `requestAnimationFrame` for the game loop
-- Input handling: keyboard state map + mouse tracking
-- Style: 2D retro pixel-art aesthetic
+- TypeScript strict mode — no `any` types
+- Jest + ts-jest for testing; nock for HTTP mocking (ingestion)
+- pino for structured logging
+- Atomic file writes (.tmp.json → .json) for all data persistence
+- API base URLs and config via environment variables, never hardcoded
+- Each module's `data/` directory is gitignored (runtime artifacts only)
+- Do not modify other modules when working on one module
